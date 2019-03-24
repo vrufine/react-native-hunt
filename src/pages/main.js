@@ -8,18 +8,23 @@ export default class Main extends Component {
   }
 
   state = {
-    docs: []
+    productInfo: {},
+    docs: [],
+    page: 1
   }
 
   componentDidMount() {
     this.loadProducts()
   }
 
-  loadProducts = async () => {
-    const res = await api.get('/products')
-    const { docs } = res.data
+  loadProducts = async (page = 1) => {
+    const res = await api.get(`/products?page=${page}`)
+    const { docs, ...productInfo } = res.data
+
     this.setState({
-      docs
+      docs: [...this.state.docs, ...docs],
+      productInfo,
+      page
     })
   }
 
@@ -36,6 +41,13 @@ export default class Main extends Component {
     </View>
   )
 
+  loadMore = () => {
+    const { page, productInfo } = this.state
+    if (page === productInfo.pages) return
+    const pageNumber = page + 1
+    this.loadProducts(pageNumber)
+  }
+
   render() {
     return (
       <View style={styles.container}>
@@ -44,6 +56,8 @@ export default class Main extends Component {
           data={this.state.docs}
           keyExtractor={item => item._id}
           renderItem={this.renderItem}
+          onEndReached={this.loadMore}
+          onEndReachedThreshold={0.2}
         />
       </View>
     )
